@@ -1,11 +1,8 @@
-## Código de la Librería (`MinimalNunchuk.h`)
-
-```cpp
 /*
  * MinimalNunchuk.h
- * Librería mínima para leer un Nunchuk de Wii.
- * IMPORTANTE: Esta librería NO llama a Wire.begin().
- * El usuario debe llamar a Wire.begin(SDA, SCL) ANTES de llamar a nunchuk.begin().
+ * Minimal custom library for reading a Wii Nunchuk.
+ * IMPORTANT: This library does NOT call Wire.begin().
+ * The user must call Wire.begin(SDA, SCL) BEFORE calling nunchuk.begin().
  */
 
 #ifndef MINIMAL_NUNCHUK_H
@@ -15,18 +12,18 @@
 
 class MinimalNunchuk {
 public:
-    // Variables públicas para acceso directo
+    // Public variables for direct access
     int joyX, joyY;
     bool buttonC, buttonZ;
     int accelX, accelY, accelZ;
 
     MinimalNunchuk() {
-        // Constructor (vacío)
+        // Constructor (empty)
     }
 
-    // Inicializa la comunicación (NO llama a Wire.begin())
+    // Initializes the communication (DOES NOT call Wire.begin())
     bool begin() {
-        Wire.beginTransmission(0x52); // Dirección I2C del Nunchuk
+        Wire.beginTransmission(0x52); // Nunchuk I2C address
         Wire.write(0xF0);
         Wire.write(0x55);
         Wire.endTransmission();
@@ -37,11 +34,11 @@ public:
         return Wire.endTransmission() == 0;
     }
 
-    // Lee los datos del Nunchuk
+    // Reads data from the Nunchuk
     bool update() {
-        Wire.requestFrom(0x52, 6); // Pedir 6 bytes de datos
+        Wire.requestFrom(0x52, 6); // Request 6 bytes of data
         if (Wire.available() < 6) {
-            return false; // Error de lectura
+            return false; // Read error
         }
 
         uint8_t data[6];
@@ -49,21 +46,21 @@ public:
             data[i] = Wire.read();
         }
 
-        // Enviar el comando para la próxima lectura
+        // Send the command for the next read
         Wire.beginTransmission(0x52);
         Wire.write(0x00);
         Wire.endTransmission();
         delay(1);
 
-        // Decodificar los datos
+        // Decode the data
         joyX = data[0];
         joyY = data[1];
         accelX = (data[2] << 2) | ((data[5] >> 2) & 0x03);
         accelY = (data[3] << 2) | ((data[5] >> 4) & 0x03);
         accelZ = (data[4] << 2) | ((data[5] >> 6) & 0x03);
         
-        buttonC = !(data[5] & 0x02);
-        buttonZ = !(data[5] & 0x01);
+        buttonC = !(data[5] & 0x02); // Inverted logic: 0 = pressed
+        buttonZ = !(data[5] & 0x01); // Inverted logic: 0 = pressed
 
         return true;
     }
