@@ -2,7 +2,7 @@
 
 ### `Transmitter_Nunchuk.ino` (Main Sketch)
 
-```cpp
+  
 /*
  * NUNCHUK TRANSMITTER (XIAO ESP32-C6)
  * ----------------------------------
