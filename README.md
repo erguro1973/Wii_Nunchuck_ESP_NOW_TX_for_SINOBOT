@@ -84,3 +84,88 @@ This can be drastically improved by reducing the send frequency (increasing the 
 
 ---
 ---
+
+# Wii_Nunchuck_ESP_NOW_TX
+Transmisor ESP-NOW para Nunchuk de Wii basado en Xiao ESP32C6 (RiscV)
+
+# Transmisor Nunchuk con ESP-NOW (XIAO ESP32-C6)
+
+Este proyecto convierte un mando Nunchuk de Wii en un controlador inalámbrico de baja latencia y bajo consumo usando ESP-NOW. Está diseñado específicamente para la placa **Seeed Studio XIAO ESP32-C6**, aprovechando su antena externa y su formato compacto.
+
+## 🚀 Características
+
+* **Comunicación Inalámbrica:** Usa ESP-NOW para una comunicación de baja latencia y bajo consumo sin necesidad de conectarse a una red Wi-Fi.
+* **Control de Modo Dual:** Control estándar con joystick más un **Modo de Gestos** (usando el acelerómetro) que se activa manteniendo presionado el **botón Z**.
+* **Hardware Específico:** Optimizado para la placa XIAO ESP32-C6.
+* **Antena Externa:** Configurado para usar el conector de antena externa U.FL para un rango máximo.
+* **Pines I2C Personalizados:** Usa `D4 (GPIO 22)` y `D5 (GPIO 23)` para I2C, evitando conflictos con el puerto serie USB del C6.
+* **Alimentado por Batería:** Diseñado para funcionar con una batería LiPo. *(Ver nota importante sobre la alimentación)*.
+
+---
+
+## 🛠️ Componentes de Hardware
+
+* **Controlador:** Seeed Studio XIAO ESP32-C6
+* **Entrada:** Un Nunchuk de Wii (original o compatible).
+* **Conector:** Adaptador para Nunchuk (o cables soldados directamente).
+* **Alimentación:** Batería LiPo de 3.7V (ej: 500mAh).
+* **Componente Crítico:** 1x Condensador Electrolítico de **220uF a 1000uF** (para estabilizar la alimentación de la batería).
+
+---
+
+## 🔌 Cableado
+
+| Nunchuk (Cable) | Pin XIAO (Función) | Pin Físico |
+| :--- | :--- | :--- |
+| **GND** (Blanco) | `GND` | `GND` |
+| **+3.3V** (Rojo) | `3V3` | `3V3` |
+| **SDA** (Verde) | `GPIO 23` | `D5` |
+| **SCL** (Amarillo)| `GPIO 22` | `D4` |
+
+### 🔋 ¡Nota Importante sobre la Alimentación por Batería!
+
+El ESP32 consume picos de alta corriente (300-400mA) al transmitir con Wi-Fi/ESP-NOW. Una batería LiPo no puede manejar estos picos instantáneos, causando una caída de voltaje (*brownout*) que reinicia el chip.
+
+**SOLUCIÓN OBLIGATORIA:** Debes soldar un **condensador electrolítico (220uF a 1000uF)** entre los pines `3.3V` y `GND` de la placa XIAO. Esto actúa como una reserva para suministrar energía during esos picos.
+
+* Pata **Negativa (-)** del condensador ➔ Pin **GND**
+* Pata **Positiva (+)** del condensador ➔ Pin **3.3V**
+
+---
+
+## ⚙️ Configuración de Software
+
+### 1. Entorno (Arduino IDE)
+
+Asegúrate de tener instalado el gestor de placas de Espressif ESP32 y selecciona "Seeed Studio XIAO ESP32C6" como tu placa.
+
+### 2. Librerías
+
+Este proyecto requiere una librería de Nunchuk personalizada (`MinimalNunchuk.h`) para permitir la inicialización manual de I2C en pines específicos.
+
+* `WiFi.h` (Incluida con ESP32)
+* `esp_now.h` (Incluida con ESP32)
+* `Wire.h` (Incluida)
+* `MinimalNunchuk.h` (Debes añadir esta librería personalizada a tu proyecto)
+
+---
+
+## 📈 Consumo de Energía (Prueba)
+
+El consumo medio de este transmisor (enviando datos ~50 veces por segundo) es de aprox. **63 mA**.
+
+* **Batería de 500mAh:** ~8 horas de autonomía.
+
+Esto se puede mejorar drásticamente reduciendo la frecuencia de envío (aumentando el `delay()`) o implementando Light Sleep.
+
+---
+
+## 🔧 Solución de Problemas
+
+* **El TX se reinicia constantemente con batería:** No has instalado el condensador de 220uF. Es el problema más común.
+* **"Nunchuk no detectado":** Revisa tu cableado. SDA debe ir a D5 (23) y SCL a D4 (22). Verifica 3.3V y GND.
+* **Alcance pobre:** Asegúrate de que `USE_EXTERNAL_ANTENNA` esté definido y tengas una antena conectada al puerto U.FL. Si no, comenta esa línea para usar la antena interna de la PCB.
+* **El receptor no recibe nada:** Verifica que la dirección MAC en el TX es correcta y que ambos dispositivos están en el mismo canal Wi-Fi (Canal 1 por defecto).
+
+---
+---
